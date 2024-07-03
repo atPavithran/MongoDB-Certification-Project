@@ -3,15 +3,12 @@ from pydantic import BaseModel
 from pymongo import MongoClient
 from bson import ObjectId
 
-# Initialize FastAPI and APIRouter
 app = FastAPI()
 router = APIRouter()
 
-# Initialize MongoDB client to use the `expense` database
 client = MongoClient("mongodb://localhost:27017")
 db = client.expense
 
-# Define Pydantic models
 class User(BaseModel):
     username: str
     email: str
@@ -39,7 +36,6 @@ class Month(BaseModel):
 class Expense(BaseModel):
     months: list[Month]
 
-# Helper function to convert ObjectId to string
 def convert_object_id(data):
     if isinstance(data, list):
         for item in data:
@@ -49,22 +45,17 @@ def convert_object_id(data):
         data['_id'] = str(data['_id'])
     return data
 
-# API Endpoint for user registration
 from datetime import datetime
 
-# ... (previous imports and setup remain the same)
 
 @router.post("/register")
 async def register_user(user: User, customer_details: CustomerDetails):
     try:
-        # Check if user already exists
         if db.customer_details.find_one({"userid": customer_details.userid}):
             raise HTTPException(status_code=400, detail="User already exists")
         
-        # Insert user into customer_details collection
         db.customer_details.insert_one(customer_details.dict())
 
-        # Initialize expense document with all months and default categories
         current_year = datetime.now().year
         months = ['January', 'February', 'March', 'April', 'May', 'June', 
                   'July', 'August', 'September', 'October', 'November', 'December']
@@ -87,7 +78,7 @@ async def register_user(user: User, customer_details: CustomerDetails):
             "months": [
                 {
                     "month": f"{month}",
-                    "monthly_budget": 900,  # Sum of default category budgets
+                    "monthly_budget": 900, 
                     "amount_spent": 0,
                     "categories": default_categories
                 } for month in months
@@ -128,7 +119,6 @@ async def modify_budget(user_id: str, month: str, category: str, new_budget: int
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-# ... (rest of the code remains the same)
 
 # API Endpoint for user authentication
 @router.post("/login")
